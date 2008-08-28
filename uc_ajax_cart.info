@@ -1,0 +1,5 @@
+; $Id$
+name = Ajax Driven Cart
+description = Ajax Driven Cart
+dependencies = uc_cart uc_product
+package = "Ubercart - core (optional)"

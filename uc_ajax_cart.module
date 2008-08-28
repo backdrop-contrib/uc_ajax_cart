@@ -1,0 +1,169 @@
+<?php
+/***
+ * $Id$
+ *
+ * author Erik Seifert <support@b-connect.de>
+ *
+ */
+function uc_ajax_cart_menu($mayCache)
+{
+    /** Add standard js **/
+    drupal_add_js( drupal_get_path('module', 'uc_ajax_cart') .'/js/jquery.ajax.cart.js' );
+    drupal_add_js( drupal_get_path('module', 'uc_ajax_cart') .'/js/forms.js' );
+    drupal_add_css( drupal_get_path('module', 'uc_ajax_cart') .'/css/ajaxcart.css' );
+
+    /** Get button text **/
+    $txt = variable_get('uc_ajax_cart_button_txt','') ;
+    if ( !empty($txt) )
+    {
+        $txt = t($txt) ;
+    } else {
+        $txt = false ;
+    }
+    $settings = array(
+        'url' =>  url('cart/ajax/update'),
+        'text' => $txt,
+        'disable' => variable_get('uc_ajax_cart_button_disable',''),
+        'class' => variable_get('uc_ajax_cart_button_class','disable')
+    );
+    drupal_add_js( array('uc_ajax_cart' => $settings) , "setting");
+    if ( $mayCache )
+    {
+        $items[] = array(
+          'path' => 'cart/ajax/update',
+          'title' => t('Shopping ajax cart'),
+          'description' => t('View/modify the contents of your shopping cart or proceed to checkout.'),
+          'callback' => 'uc_cart_ajax_handler',
+          'access' => user_access('access content'),
+          'type' => MENU_CALLBACK,
+        );
+    }
+    return $items ;
+}
+
+function uc_ajax_cart_block($op = 'list', $delta = 0, $edit = array())
+{
+   if ($op == 'list')
+   {
+        $blocks[0]['info'] = t('Ubercart ajax shopping cart');
+        return $blocks;
+   } elseif ($op == 'view')
+   {
+        $content = uc_cart_block($op,$delta,$edit);
+        $content['content'] = '<div id="ajaxCartUpdate">' . $content['content'] . '</div>' ;
+        return $content ;
+   } elseif ($op == 'configure')
+   {
+        $form = uc_cart_block($op,$delta,$edit);
+        $form['ajaxSettings'] = array(
+            '#type' => 'fieldset',
+            '#collapsed' => false,
+            '#title' => t('Ajax Cart Options'),
+            '#description' => t('Set some options for Ajax Cart.')
+        );
+        $form['ajaxSettings']['loadForm'] = array(
+            '#type' => 'checkbox',
+            '#return_value' => 1,
+            '#title' => t('Load form.js from module directory.'),
+            '#description' => t('Disabled if you load your own javascript for forms.'),
+            '#default_value' => variable_get('uc_ajax_cart_js_load', 1)
+        );
+        /*
+         * @todo not tested
+        $form['ajaxSettings']['alternateJS'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Load form.js from this location.'),
+            '#description' => t('Load jQuery form handler from a different location.'),
+            '#default_value' => variable_get('uc_ajax_cart_js_src', "")
+        );
+        */
+        $form['ajaxSettings']['buttonDisable'] = array(
+            '#type' => 'checkbox',
+            '#return_value' => 1,
+            '#title' => t('Disable button on ajax call.'),
+            '#description' => t("Disable the button , so you don't have multiple requests.' "),
+            '#default_value' => variable_get('uc_ajax_cart_button_disable', 1)
+        );
+        $form['ajaxSettings']['alternateText'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Change button text.'),
+            '#default_value' => variable_get('uc_ajax_cart_button_txt', "")
+        );
+        $form['ajaxSettings']['alternateButtonClass'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Button class for an ajax call.'),
+            '#description' => t('Giving the button this class for request time.'),
+            '#default_value' => variable_get('uc_ajax_cart_button_class', "")
+        );
+        $form['ajaxSettings']['alternateTextCart'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Change button text for products already in cart.'),
+            '#description' => t('Be aware does not work with attributes!'),
+            '#default_value' => variable_get('uc_ajax_cart_button_c', "")
+        );
+        $form['#submit'] = array_merge(array('uc_ajax_cart_block_submit' => array()), (array) $form['#submit']);
+        return $form ;
+   } elseif ( $op == 'save' && isset($edit['uc_cart_block_empty_hide']) )
+   {
+   	    variable_set('uc_ajax_cart_js_load', $edit['loadForm']) ;
+        variable_set('uc_ajax_cart_js_src', $edit['alternateJS']) ;
+        variable_set('uc_ajax_cart_button_txt', $edit['alternateText']) ;
+        variable_set('uc_ajax_cart_button_c', $edit['alternateTextCart']) ;
+        variable_set('uc_ajax_cart_button_class', $edit['alternateButtonClass']) ;
+        variable_set('uc_ajax_cart_button_disable', $edit['buttonDisable']) ;
+        uc_cart_block($op,$delta,$edit);
+   }
+}
+
+
+function uc_ajax_cart_form_alter($formID,&$form)
+{
+
+    if ( $form['#base'] == "uc_product_add_to_cart_form" )
+    {
+        $txt = variable_get('uc_ajax_cart_button_c',false) ;
+        if ( $txt !== false && !empty($txt) )
+        {
+            $cart = uc_cart_get_contents() ;
+            $nid = $form['nid']['#value'] ;
+            foreach ( $cart as $key  => $item )
+            {
+                if ( $item->nid == $nid )
+                {
+                    $form['submit']['#value'] = t($txt) ;
+                    break ;
+                }
+            }
+        }
+        $form['#action'] = url('cart/ajax/update');
+        $form['#attributes'] = array_merge($form['#attributes'],array('class' => 'ajax-cart-form'));
+        $jsOpts = array (
+            'target' => '#testting',
+            'success' => 'updateAjaxCart'
+        );
+    }
+}
+
+function uc_cart_ajax_handler()
+{
+    $formID = $_REQUEST['form_id'] ;
+    $nid = str_replace('uc_product_add_to_cart_form_' , '' ,$_REQUEST['form_id']  );
+    $formValues = $_REQUEST;
+    $formValues['nid'] = $nid ;
+    if ( is_numeric($nid) && $nid > 0 )
+    {
+        $node = node_load($nid);
+        if ( !is_object($node) ) return ;
+        if ( is_object($node) && uc_product_is_product($node) )
+        {
+            $qty  = $_REQUEST['qty'] ;
+            uc_cart_add_item($nid, $qty , module_invoke_all('add_to_cart_data',$formValues), null ,false ,false) ;
+        }
+    }
+    $output = "" ;
+    $output .= theme('uc_cart_block_content');
+    $data = array('form_id' => $formID, 'content' => $output );
+    print json_encode($data) ;
+}
+
+?>
