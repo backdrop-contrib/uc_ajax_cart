@@ -5,14 +5,15 @@
  * @author Erik Seifert <support@b-connect.de>
  *
  */
+
 /**
  * override hook perm
  */
-
 function uc_ajax_cart_perm()
 {
 	return array('access content');
 }
+
 /**
  * override hook menu
  */
@@ -72,6 +73,7 @@ function uc_ajax_cart_menu($mayCache)
     }
     return $items ;
 }
+
 /**
  * override hook block
  */
@@ -207,6 +209,7 @@ function uc_ajax_cart_form_alter($formID,&$form)
     	_uc_ajax_cart_alter_cart_kit($form) ;
     }
 }
+
 function _uc_ajax_cart_alter_cart(&$form,$isKit = false)
 {
         $txt = variable_get('uc_ajax_cart_button_c',false) ;
@@ -243,6 +246,7 @@ function _uc_ajax_cart_alter_cart(&$form,$isKit = false)
         }
         $form['#attributes'] = array_merge($form['#attributes'],array('class' => 'ajax-cart-form'));
 }
+
 function _uc_ajax_cart_alter_cart_kit(&$form,$isKit = false)
 {
         $txt = variable_get('uc_ajax_cart_button_c',false) ;
@@ -262,6 +266,7 @@ function _uc_ajax_cart_alter_cart_kit(&$form,$isKit = false)
         }
         $form['#attributes'] = array_merge($form['#attributes'],array('class' => 'ajax-cart-form ajax-cart-form-kit'));
 }
+
 function uc_cart_ajax_handler()
 {
     header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
@@ -380,4 +385,3 @@ function theme_uc_product_ajax_image($images,$nid)
   $rel_count++;
   return $output;
 }
-?>
