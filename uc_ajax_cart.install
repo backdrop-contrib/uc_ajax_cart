@@ -2,10 +2,8 @@
 /***
  * $Id$
  *
- * author Erik Seifert <support@b-connect.de>
  *
  */
-
 function uc_ajax_cart_install()
 {
     variable_set('uc_ajax_cart_js_load',true) ;
@@ -18,7 +16,6 @@ function uc_ajax_cart_install()
     variable_set('uc_ajax_cart_del_cache',false) ;
     variable_set('uc_ajax_cart_effects',true) ;
 }
-
 function uc_ajax_cart_uninstall()
 {
     variable_del('uc_ajax_cart_js_load') ;

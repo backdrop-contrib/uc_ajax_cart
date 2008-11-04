@@ -1,12 +1,12 @@
 jQuery(document).ready(function(){
-
+	/** get settings **/
 	var bText = Drupal.settings.uc_ajax_cart.text ;
 	var disabled = Drupal.settings.uc_ajax_cart.disable ;
 	var bclass = Drupal.settings.uc_ajax_cart.bclass ;
 	var ddSupport = Drupal.settings.uc_ajax_cart.ddSupport;
-
 	if ( ddSupport == true )
 	{
+		//Activate drag and drop support
 		jQuery('#ajaxCartUpdate').droppable({ accept : '.product_image_drag' ,
 			hoverClass : 'dropHover',
 			activeClass   : 'dropActive',
@@ -19,7 +19,6 @@ jQuery(document).ready(function(){
 			}
 		});
 	}
-
 	jQuery('form.ajax-cart-form').each(function(){
 		var $form = jQuery(this);
 		if ( ddSupport == true )
@@ -69,9 +68,6 @@ jQuery(document).ready(function(){
 		return false;});
 	})
 })
-
-
-
 function updateAjaxCart(data,responseType)
 {
 	var $uEle = jQuery('#ajaxCartUpdate').eq(0);
@@ -96,7 +92,5 @@ function updateAjaxCart(data,responseType)
 		jQuery('#ajaxCartUpdate').effect('highlight',{},500);
 	}
 	$uEle.empty().html(data.content);
-
-
 	jQuery('body').css({cursor : 'default'});
 }
