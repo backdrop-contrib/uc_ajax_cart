@@ -32,15 +32,15 @@ function uc_ajax_cart_menu($mayCache)
     if ( variable_get('uc_ajax_cart_dragdrop',false) === true && module_exists('jquery_ui') )
     {
         $dragAndDrop = true ;
-        $libs = array('ui.draggable', 'ui.droppable');
+        jquery_ui_add(array('ui.draggable', 'ui.droppable')) ;
     }
     /** EnableEffects if jquery ui exists and option is true **/
     if ( variable_get('uc_ajax_cart_effects',false) === true && module_exists('jquery_ui') )
     {
         $effects = true ;
-        $libs[] = 'ui.effects';
+        jquery_ui_add(array('ui.effects') ) ;
     }
-    jquery_ui_add($libs) ;
+
     /** Get button text **/
     $txt = variable_get('uc_ajax_cart_button_txt','') ;
     if ( !empty($txt) )
