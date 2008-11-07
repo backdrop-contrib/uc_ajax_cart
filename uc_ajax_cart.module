@@ -38,7 +38,7 @@ function uc_ajax_cart_menu($mayCache)
     if ( variable_get('uc_ajax_cart_effects',false) === true && module_exists('jquery_ui') )
     {
         $effects = true ;
-        jquery_ui_add(array('ui.effects') ) ;
+        jquery_ui_add(array('effects.core','effects.highlight') ) ;
     }
 
     /** Get button text **/
