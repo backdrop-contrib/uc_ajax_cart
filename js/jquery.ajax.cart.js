@@ -75,7 +75,8 @@ function updateAjaxCart(data,responseType)
 	var bText = Drupal.settings.uc_ajax_cart.text ;
 	var bclass = Drupal.settings.uc_ajax_cart.bclass ;
 	var effects = Drupal.settings.uc_ajax_cart.effects;
-	if (collapsed_block == true)
+	if ( typeof collapsed_block != "undefined"
+	     && collapsed_block == true)
 	{
 		cart_block_toggle();
 	}
