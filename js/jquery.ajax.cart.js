@@ -33,9 +33,9 @@ jQuery(document).ready(function(){
 									   opacity : 1 });
 			}
 		}
-		$form.bind('submit',function(){
-				var data = jQuery(this).formToArray();
-				jQuery(this).find('input[@type=submit],button[@type=submit]').each(function(){
+		jQuery(this).find('input.ajax-submit-form,button.ajax-submit-form').bind('click',function(){
+				var $form = jQuery(this).parents('form').eq(0);
+				var data = jQuery($form).formToArray();
 					var tagName = this.tagName ;
 					var button = jQuery(this);
 					if ( bText != false )
@@ -57,8 +57,8 @@ jQuery(document).ready(function(){
 						button.css({display : 'none'});
 						button.after('<div class="ajax-cart-msg">' + bText + '</div>');
 					}
-				});
-				jQuery(this).ajaxSubmit({
+
+				jQuery($form).ajaxSubmit({
 					success : updateAjaxCart,
 					data : data,
 					async : true,
@@ -81,7 +81,7 @@ function updateAjaxCart(data,responseType)
 		cart_block_toggle();
 	}
 	jQuery('#' + form_id).find('div.ajax-cart-msg').remove();
-	jQuery('#' + form_id).find('input[@type=submit],button[@type=submit]').show().removeClass(bclass).removeAttr('disabled').each(function(){
+	jQuery('#' + form_id).find('input.ajax-submit-form,button.ajax-submit-form').show().removeClass(bclass).removeAttr('disabled').each(function(){
 		if ( bText != false )
 		{
 			if ( this.tagName == "INPUT" ) this.value = jQuery(this).attr('oldTitle');
