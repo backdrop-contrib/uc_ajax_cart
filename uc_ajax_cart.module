@@ -313,6 +313,8 @@ function _uc_ajax_cart_alter_cart_kit(&$form,$isKit = false)
                 }
             }
         }
+        if ( !is_array($form['submit']['#attributes']) ) $form['submit']['#attributes'] = array();
+        $form['submit']['#attributes'] = array_merge($form['submit']['#attributes'],array('class' => 'ajax-submit-form'));
         $form['#attributes'] = array_merge($form['#attributes'],array('class' => 'ajax-cart-form ajax-cart-form-kit'));
 }
 
