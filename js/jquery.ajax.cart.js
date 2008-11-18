@@ -14,7 +14,15 @@ jQuery(document).ready(function(){
 			drop : function (ev,ui)
 			{
 					var i = ev.target.id.split("_").reverse().shift();
-					jQuery('#uc-product-add-to-cart-form-' + i).trigger('submit');
+					$form = jQuery('#uc-product-add-to-cart-form-' + i);
+					var data = jQuery($form).formToArray();
+					jQuery($form).ajaxSubmit({
+						success : updateAjaxCart,
+						data : data,
+						async : true,
+						dataType : 'json',
+						url : Drupal.settings.base_path + 'cart/ajax/update'
+					});
 					return true ;
 			}
 		});
