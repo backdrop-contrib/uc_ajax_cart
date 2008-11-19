@@ -19,36 +19,6 @@ function uc_ajax_cart_perm()
  */
 function uc_ajax_cart_menu($mayCache)
 {
-    /** Add standard js **/
-    drupal_add_js( drupal_get_path('module', 'uc_ajax_cart') .'/js/jquery.ajax.cart.js' );
-    drupal_add_js( drupal_get_path('module', 'uc_ajax_cart') .'/js/forms.js' );
-    drupal_add_css( drupal_get_path('module', 'uc_ajax_cart') .'/css/ajaxcart.css' );
-    /** Intitalize vars **/
-    $dragAndDrop = false ;
-    $effects     = false ;
-    /** JQuery UI libs to load **/
-    $libs = array();
-    /** Enable Drag and Drop if jquery ui exists and option is true **/
-    if ( variable_get('uc_ajax_cart_dragdrop',false) === true && module_exists('jquery_ui') )
-    {
-        $dragAndDrop = true ;
-        jquery_ui_add(array('ui.draggable', 'ui.droppable')) ;
-    }
-    /** EnableEffects if jquery ui exists and option is true **/
-    if ( variable_get('uc_ajax_cart_effects',false) === true && module_exists('jquery_ui') )
-    {
-        $effects = true ;
-        jquery_ui_add(array('effects.core','effects.highlight') ) ;
-    }
-
-    /** Get button text **/
-    $txt = variable_get('uc_ajax_cart_button_txt','') ;
-    if ( !empty($txt) )
-    {
-        $txt = t($txt) ;
-    } else {
-        $txt = false ;
-    }
     if ( $mayCache )
     {
         /** Ajax cart update URL **/
@@ -59,17 +29,6 @@ function uc_ajax_cart_menu($mayCache)
           'access' => user_access('access content'),
           'type' => MENU_CALLBACK,
         );
-    } else {
-        $settings = array(
-            'url' =>  url('cart/ajax/update'), // Ajax update URL
-            'text' => $txt,                    // alternative button text
-            'effects' => $effects ,            // enable effects ?
-            'disable' => variable_get('uc_ajax_cart_button_disable',1),  // disable "Add to cart" button
-            'ddSupport' => $dragAndDrop,        // enable drag and drop ?
-            'bclass' => variable_get('uc_ajax_cart_button_class','disable')  // disable css class ?
-        );
-        //export settings
-        drupal_add_js( array('uc_ajax_cart' => $settings) , "setting");
     }
     return $items ;
 }
@@ -86,9 +45,69 @@ function uc_ajax_cart_block($op = 'list', $delta = 0, $edit = array())
         return $blocks;
    } elseif ($op == 'view')
    {
+        /** Intitalize vars **/
+        $dragAndDrop = false ;
+        $effects     = false ;
+        /** JQuery UI libs to load **/
+        $libs = array();
+        /** Enable Drag and Drop if jquery ui exists and option is true **/
+
+        drupal_add_js( drupal_get_path('module', 'uc_ajax_cart') .'/js/jquery.ajax.cart.js' );
+        drupal_add_js( drupal_get_path('module', 'uc_ajax_cart') .'/js/forms.js' );
+        drupal_add_css( drupal_get_path('module', 'uc_ajax_cart') .'/css/ajaxcart.css' );
+
+        if ( variable_get('uc_ajax_cart_dragdrop',false) === true && module_exists('jquery_ui') )
+        {
+            $dragAndDrop = true ;
+            jquery_ui_add(array('ui.draggable', 'ui.droppable')) ;
+        }
+        /** EnableEffects if jquery ui exists and option is true **/
+        if ( variable_get('uc_ajax_cart_effects',false) === true && module_exists('jquery_ui') )
+        {
+            $effects = true ;
+            jquery_ui_add(array('effects.core','effects.highlight') ) ;
+        }
+
+        $txt = variable_get('uc_ajax_cart_button_txt','') ;
+        if ( !empty($txt) )
+        {
+            $txt = t($txt) ;
+        } else {
+            $txt = false ;
+        }
+        $itemsCount = count(uc_cart_get_contents());
+        $settings = array(
+            'url' =>  url('cart/ajax/update'), // Ajax update URL
+            'text' => $txt,                    // alternative button text
+            'effects' => $effects ,            // enable effects ?
+            'emptyHide' => variable_get('uc_cart_block_empty_hide', FALSE),
+            'disable' => variable_get('uc_ajax_cart_button_disable',1),  // disable "Add to cart" button
+            'ddSupport' => $dragAndDrop,        // enable drag and drop ?
+            'itemCount' => $itemsCount,
+            'bclass' => variable_get('uc_ajax_cart_button_class','disable')  // disable css class ?
+        );
+            $item_count = count(uc_cart_get_contents());
+        //export settings
+        drupal_add_js( array('uc_ajax_cart' => $settings) , "setting");
+
         //Only a wrapper to uc_cart_block
+        $items = uc_cart_get_contents();
+        $val = variable_get('uc_cart_block_collapsed', TRUE) ? 'true' : 'false';
+        if (variable_get('uc_cart_block_collapsible', TRUE))
+        {
+            $uc_cart_path = base_path() . drupal_get_path('module', 'uc_cart');
+            uc_add_js('var collapsed_block = '. $val .';', 'inline');
+            uc_add_js("var uc_cart_path = '". $uc_cart_path ."';", 'inline');
+        }
+
         $content = uc_cart_block($op,$delta,$edit);
-        $content['content'] = '<div id="ajaxCartUpdate">' . $content['content'] . '</div>' ;
+        if ( count($items) == 0 )
+        {
+        	$content['content'] = '<div id="ajaxCartUpdate"></div>' ;
+        } else {
+        	$content['content'] = '<div id="ajaxCartUpdate">' . $content['content'] . '</div>' ;
+        }
+
         return $content ;
    } elseif ($op == 'configure')
    {
@@ -299,23 +318,7 @@ function uc_cart_ajax_handler()
             uc_cart_add_item($nid, $qty , module_invoke_all('add_to_cart_data',$formValues), null ,false ,false) ;
         }
     }
-    if ( true ==  variable_get('uc_ajax_cart_del_cache',false) )
-    {
-        uc_cart_get_contents( null, 'rebuild');
-    }
-    $output = "" ;
-    if ( true ==  variable_get('uc_ajax_cart_rebuild',false) )
-    {
-        uc_cart_get_contents( null, 'rebuild');
-    }
-    $output .= theme('uc_cart_block_content');
-    $data = array
-    (
-        'form_id' => $formID,
-        'content' => $output
-    );
-    print drupal_to_js($data) ;
-    exit();
+    uc_ajax_cart_return_json_and_exit($formValues,$formID);
 }
 
 function uc_cart_ajax_handler_kit()
@@ -338,22 +341,43 @@ function uc_cart_ajax_handler_kit()
             uc_product_kit_add_to_cart($nid, $qty ,$_REQUEST) ;
         }
     }
-    if ( true ==  variable_get('uc_ajax_cart_del_cache',false) )
-    {
-        uc_cart_get_contents( null, 'rebuild');
-    }
-    $output = "" ;
+    uc_ajax_cart_return_json_and_exit($formValues,$formID);
+}
+
+function uc_ajax_cart_return_json_and_exit( $vars, $formID )
+{
     if ( true ==  variable_get('uc_ajax_cart_rebuild',false) )
     {
-        uc_cart_get_contents( null, 'rebuild');
-    }
-    $output .= theme('uc_cart_block_content');
+        $items = uc_cart_get_contents( null, 'rebuild');
+    } else $items = uc_cart_get_contents();
+
     $data = array
     (
         'form_id' => $formID,
-        'content' => $output
+        'itemCount' => count($items)
     );
+
+    if ( $vars['emptyHide'] == "1" && $vars['iCount'] == "0" )
+    {
+
+        $block = new StdClass();
+
+        $bContent = uc_ajax_cart_block('view') ;
+
+        $block->subject = $bContent['subject'];
+        $block->content = $bContent['content'];
+        $block->module = 'uc_ajax_cart' ;
+        $block->delta = 0 ;
+        $output = theme('block',$block) ;
+        $data['renderAll'] = true ;
+    } else {
+        $output .= theme('uc_cart_block_content');
+        $data['renderAll'] = false ;
+    }
+
+    $data['content'] = $output ;
     print drupal_to_js($data) ;
+    exit();
 }
 
 function theme_uc_product_ajax_image($images,$nid)
