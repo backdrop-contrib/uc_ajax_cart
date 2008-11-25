@@ -41,6 +41,7 @@ jQuery(document).ready(function(){
 				var data = jQuery($form).formToArray();
 				data.push({name: 'emptyHide', value: emptyHide});
 				data.push({name: 'iCount', value:  Drupal.settings.uc_ajax_cart.itemCount });
+				data.push({name: 'callback', value:  $form.find('input[@name=callback]').attr('value') });
 				var tagName = this.tagName ;
 				var button = jQuery(this);
 				if ( bText != false )
@@ -77,8 +78,9 @@ function updateAjaxCart(data,responseType)
 	var emptyHide = Drupal.settings.uc_ajax_cart.emptyHide;
 	var iCount = Drupal.settings.uc_ajax_cart.itemCount;
 	var aCount = data.itemCount ;
-	jQuery('#' + form_id).find('div.ajax-cart-msg').remove();
-	jQuery('#' + form_id).find('input.ajax-submit-form,button.ajax-submit-form').show().removeClass(bclass).removeAttr('disabled').each(function(){
+	var $form = jQuery('input.' + data.callback ).parents('form').eq(0) ;
+	$form.find('div.ajax-cart-msg').remove();
+	$form.find('input.ajax-submit-form,button.ajax-submit-form').show().removeClass(bclass).removeAttr('disabled').each(function(){
 		if ( bText != false )
 		{
 			if ( this.tagName == "INPUT" ) this.value = jQuery(this).attr('oldTitle');

@@ -11,7 +11,7 @@
  */
 function uc_ajax_cart_perm()
 {
-	return array('access content');
+  return array('access content');
 }
 
 /**
@@ -103,9 +103,9 @@ function uc_ajax_cart_block($op = 'list', $delta = 0, $edit = array())
         $content = uc_cart_block($op,$delta,$edit);
         if ( count($items) == 0 )
         {
-        	$content['content'] = '<div id="ajaxCartUpdate"></div>' ;
+          $content['content'] = '<div id="ajaxCartUpdate"></div>' ;
         } else {
-        	$content['content'] = '<div id="ajaxCartUpdate">' . $content['content'] . '</div>' ;
+          $content['content'] = '<div id="ajaxCartUpdate">' . $content['content'] . '</div>' ;
         }
 
         return $content ;
@@ -191,7 +191,7 @@ function uc_ajax_cart_block($op = 'list', $delta = 0, $edit = array())
    } elseif ( $op == 'save' && isset($edit['uc_cart_block_empty_hide']) )
    {
         //Set configuration
-   	    variable_set('uc_ajax_cart_js_load', $edit['loadForm']) ;
+         variable_set('uc_ajax_cart_js_load', $edit['loadForm']) ;
         variable_set('uc_ajax_cart_js_src', $edit['alternateJS']) ;
         variable_set('uc_ajax_cart_button_txt', $edit['alternateText']) ;
         variable_set('uc_ajax_cart_button_c', $edit['alternateTextCart']) ;
@@ -199,7 +199,7 @@ function uc_ajax_cart_block($op = 'list', $delta = 0, $edit = array())
         variable_set('uc_ajax_cart_button_disable', $edit['buttonDisable']) ;
         if ( $edit['rebuildCache'] == true )
         {
-        	variable_set('uc_ajax_cart_rebuild',true) ;
+          variable_set('uc_ajax_cart_rebuild',true) ;
         } else variable_set('uc_ajax_cart_rebuild',false) ;
         if ( $edit['effects'] == true )
         {
@@ -220,12 +220,14 @@ function uc_ajax_cart_block($op = 'list', $delta = 0, $edit = array())
 
 function uc_ajax_cart_form_alter($formID,&$form)
 {
-    if ( $form['#base'] == "uc_product_add_to_cart_form" )
+    if ( $form['#base'] == "uc_product_add_to_cart_form"
+         || $form['#base'] == "uc_catalog_buy_it_now_form")
     {
         _uc_ajax_cart_alter_cart($form);
-    } elseif ( $form['#base'] == "uc_product_kit_add_to_cart_form" )
+    } elseif ( $form['#base'] == "uc_product_kit_add_to_cart_form"
+               ||  $form['#base'] == "uc_product_kit_buy_it_now_form"  )
     {
-    	_uc_ajax_cart_alter_cart_kit($form) ;
+      _uc_ajax_cart_alter_cart_kit($form) ;
     }
 }
 
@@ -259,7 +261,7 @@ function _uc_ajax_cart_alter_cart(&$form,$isKit = false)
             }
         } elseif ( variable_get('uc_ajax_cart_dragdrop',false) !== false && !module_exists('jquery_ui') )
         {
-        	watchdog('uc_ajax_cart',
+          watchdog('uc_ajax_cart',
                      t('Please activate jquery_ui module for drag and drop support'),
                      WATCHDOG_WARNING) ;
         }
@@ -268,6 +270,7 @@ function _uc_ajax_cart_alter_cart(&$form,$isKit = false)
 
 function _uc_ajax_cart_alter_cart_kit(&$form,$isKit = false)
 {
+        _uc_ajax_cart_alter_form_all($form);
         $txt = variable_get('uc_ajax_cart_button_c',false) ;
         // Display another text on button if product is on cart
         if ( $txt !== false && !empty($txt) )
@@ -278,20 +281,29 @@ function _uc_ajax_cart_alter_cart_kit(&$form,$isKit = false)
             {
                 if ( $item->nid == $nid )
                 {
-                    $form['submit']['#value'] = t($txt) ;
+                    $form['submit']['#value'] = "xx" . t($txt) ;
                     break ;
                 }
             }
         }
-        _uc_ajax_cart_alter_form_all($form);
-
 }
 
 function _uc_ajax_cart_alter_form_all(&$form)
 {
+    static $nids ;
+
+    $nids++ ;
+
     if ( !is_array($form['submit']['#attributes']) ) $form['submit']['#attributes'] = array();
-    $form['submit']['#attributes'] = array_merge($form['submit']['#attributes'],array('class' => 'ajax-submit-form'));
-    $form['#attributes'] = array_merge($form['#attributes'],array('class' => 'ajax-cart-form ajax-cart-form-kit'));
+
+    $form['submit']['#attributes']['class'] .= ' ajax-submit-form';
+    $form['#attributes']['class'] .= ' ajax-cart-form ';
+    $form['callback'] = array(
+        '#value' =>  'ajax_cart_submit_' . $nids,
+        '#type'  =>  'hidden',
+        '#attributes' => array('class'    =>  'ajax_cart_submit_' . $nids)
+    );
+
 }
 
 function uc_cart_ajax_handler()
@@ -299,25 +311,52 @@ function uc_cart_ajax_handler()
     header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // past date
     $formID = $_REQUEST['form_id'] ;
+
     if ( eregi('uc_product_kit_add_to_cart_form', $formID) )
     {
-    	uc_cart_ajax_handler_kit();
+        uc_cart_ajax_handler_kit();
         exit();
     }
 
-    if ( !eregi('uc_product_add_to_cart_form_',$formID) ) return ;
-    $nid = str_replace('uc_product_add_to_cart_form_' , '' ,$_REQUEST['form_id']  );
-    $formValues = $_REQUEST;
-    $formValues['nid'] = $nid ;
-    if ( is_numeric($nid) && $nid > 0 )
+    if ( eregi('uc_product_add_to_cart_form_',$formID) )
     {
-        $node = node_load($nid);
-        if ( is_object($node) && uc_product_is_product($node) )
-        {
-            $qty  = $_REQUEST['qty'] ;
-            uc_cart_add_item($nid, $qty , module_invoke_all('add_to_cart_data',$formValues), null ,false ,false) ;
-        }
+    	$nid = (int) str_replace('uc_product_add_to_cart_form_' , '' ,$_REQUEST['form_id']  );
+    } elseif ( eregi('uc_catalog_buy_it_now_form_',$formID) )
+    {
+        $nid = (int) str_replace('uc_catalog_buy_it_now_form_' , '' ,$_REQUEST['form_id']  );
+    } else {
+        exit() ;
+        return ;
     }
+
+    if ( !is_numeric($nid) )
+    {
+        exit();
+    }
+
+
+    $node = node_load((int)$nid);
+
+
+    if ( $node->type == 'product_kit' )
+    {
+        uc_cart_ajax_handler_kit();
+        exit();
+    }
+
+
+    $formValues = $_REQUEST;
+
+    if ( is_object($node) && uc_product_is_product($node) )
+    {
+        if ( !isset($formValues['qty']) || !is_numeric($formValues['qty']) )
+        {
+          $qty = 1 ;
+          $formValues['qty'] = 1 ;
+        } else $qty = (int) $formValues['qty'] ;
+        uc_cart_add_item($nid, $qty , module_invoke_all('add_to_cart_data',$formValues), null ,false ,false) ;
+    }
+
     uc_ajax_cart_return_json_and_exit($formValues,$formID);
 }
 
@@ -326,26 +365,47 @@ function uc_cart_ajax_handler_kit()
     header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Datum in der Vergangenheit
     $formID = $_REQUEST['form_id'] ;
-    $nid = str_replace('uc_product_kit_add_to_cart_form_' , '' ,$_REQUEST['form_id']  );
-    $formValues = $_REQUEST;
-    $formValues['nid'] = $nid ;
-    if ( is_numeric($nid) && $nid > 0 )
+
+    if ( eregi('uc_product_kit_add_to_cart_form_',$formID) )
     {
-        $node = node_load($nid);
-        if ( is_object($node) && $node->type == 'product_kit' )
-        {
-            if ( !isset($_REQUEST['qty']) && is_numeric($_REQUEST['qty']) )
-            {
-            	$qty = 1 ;
-            } else $qty = (int) $_REQUEST['qty'] ;
-            uc_product_kit_add_to_cart($nid, $qty ,$_REQUEST) ;
-        }
+        $nid = (int) str_replace('uc_product_kit_add_to_cart_form_' , '' ,$formID );
+    } elseif ( eregi('uc_product_kit_buy_it_now_form_',$formID) )
+    {
+        $nid = (int) str_replace('uc_product_kit_buy_it_now_form_' , '' ,$formID  );
+    } elseif ( eregi('uc_catalog_buy_it_now_form_',$formID) )
+    {
+    	$nid = (int) str_replace('uc_catalog_buy_it_now_form_' , '' ,$formID  );
+    } else {
+    	exit();
     }
+
+    if ( !is_numeric($nid) )
+    {
+    	exit();
+    }
+
+    $formValues = $_REQUEST;
+    $node = node_load($nid);
+
+    if ( is_object($node) && $node->type == 'product_kit' )
+    {
+        if ( !isset($_REQUEST['qty']) || !is_numeric($_REQUEST['qty']) )
+        {
+          $qty = 1 ;
+        } else $qty = (int) $_REQUEST['qty'] ;
+        uc_product_kit_add_to_cart($nid, $qty ,$formValues) ;
+    }
+
     uc_ajax_cart_return_json_and_exit($formValues,$formID);
 }
 
 function uc_ajax_cart_return_json_and_exit( $vars, $formID )
 {
+    if ( !isset($vars['callback']) )
+    {
+    	exit();
+        return ;
+    }
     if ( true ==  variable_get('uc_ajax_cart_rebuild',false) )
     {
         $items = uc_cart_get_contents( null, 'rebuild');
@@ -361,9 +421,7 @@ function uc_ajax_cart_return_json_and_exit( $vars, $formID )
     {
 
         $block = new StdClass();
-
         $bContent = uc_ajax_cart_block('view') ;
-
         $block->subject = $bContent['subject'];
         $block->content = $bContent['content'];
         $block->module = 'uc_ajax_cart' ;
@@ -374,7 +432,7 @@ function uc_ajax_cart_return_json_and_exit( $vars, $formID )
         $output .= theme('uc_cart_block_content');
         $data['renderAll'] = false ;
     }
-
+    $data['callback'] = $vars['callback'] ;
     $data['content'] = $output ;
     print drupal_to_js($data) ;
     exit();
