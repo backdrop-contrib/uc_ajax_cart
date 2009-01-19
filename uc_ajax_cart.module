@@ -303,6 +303,10 @@ function _uc_ajax_cart_alter_form_all(&$form)
         '#type'  =>  'hidden',
         '#attributes' => array('class'    =>  'ajax_cart_submit_' . $nids)
     );
+    $form['pnid'] = array(
+    	'#type' => 'hidden',
+    	'#value' => $form['nid']['#value']
+    ); 
 
 }
 
@@ -311,6 +315,9 @@ function uc_cart_ajax_handler()
     header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // past date
     $formID = $_REQUEST['form_id'] ;
+    
+    $nid = $_REQUEST['pnid'] ;
+    $_REQUEST['nid'] = $nid ;
 
     if ( eregi('uc_product_kit_add_to_cart_form', $formID) )
     {
@@ -318,24 +325,17 @@ function uc_cart_ajax_handler()
         exit();
     }
 
-    if ( eregi('uc_product_add_to_cart_form_',$formID) )
-    {
-    	$nid = (int) str_replace('uc_product_add_to_cart_form_' , '' ,$_REQUEST['form_id']  );
-    } elseif ( eregi('uc_catalog_buy_it_now_form_',$formID) )
-    {
-        $nid = (int) str_replace('uc_catalog_buy_it_now_form_' , '' ,$_REQUEST['form_id']  );
-    } else {
-        exit() ;
-        return ;
-    }
-
     if ( !is_numeric($nid) )
     {
         exit();
     }
 
-
     $node = node_load((int)$nid);
+    
+    if ( !is_object($node) )
+    {
+    	exit();
+    }
 
 
     if ( $node->type == 'product_kit' )
@@ -344,19 +344,18 @@ function uc_cart_ajax_handler()
         exit();
     }
 
-
     $formValues = $_REQUEST;
 
     if ( is_object($node) && uc_product_is_product($node) )
     {
-        if ( !isset($formValues['qty']) || !is_numeric($formValues['qty']) )
+    	if ( !isset($formValues['qty']) || !is_numeric($formValues['qty']) )
         {
           $qty = 1 ;
           $formValues['qty'] = 1 ;
         } else $qty = (int) $formValues['qty'] ;
-        uc_cart_add_item($nid, $qty , module_invoke_all('add_to_cart_data',$formValues), null ,false ,false) ;
+        $data = module_invoke_all('add_to_cart_data',$formValues);
+        uc_cart_add_item($nid, $qty , $data , null ,false ,false) ;
     }
-
     uc_ajax_cart_return_json_and_exit($formValues,$formID);
 }
 
@@ -365,6 +364,9 @@ function uc_cart_ajax_handler_kit()
     header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Datum in der Vergangenheit
     $formID = $_REQUEST['form_id'] ;
+    
+    $nid = $_REQUEST['pnid'];
+    $_REQUEST['nid'] = $nid ;
 
     if ( eregi('uc_product_kit_add_to_cart_form_',$formID) )
     {
