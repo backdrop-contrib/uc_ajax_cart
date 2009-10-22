@@ -1,5 +1,0 @@
-; $Id$
-name = Ajax Driven Cart
-description = Ajax Driven Cart
-dependencies = uc_cart uc_product jquery_update
-package = "Ubercart - extra"
