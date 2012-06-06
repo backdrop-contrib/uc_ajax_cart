@@ -428,7 +428,6 @@ function uc_ajax_cart_init() {
     'TIMEOUT' => (int) variable_get('ajax_cart_message_timeout', UC_AJAX_CART_DEFAULT_TIMEOUT),
     'UPDATE_CALLBACK' => url(UC_AJAX_CART_UPDATE_CALLBACK),
     'UPDATE_MESSAGE' => t('Update cart'), // Message displayed when a product is being updated in cart.
-    'SESSION' => session_id(),
     'UPDATE' => variable_get('uc_ajax_cart_closed_update', 0),
     'CART_OPERATION' => t('Cart'), // Message's title displayed when a product is being added to cart.
     'CART_VIEW_ON' => variable_get('uc_ajax_cart_cart_view', 0),
