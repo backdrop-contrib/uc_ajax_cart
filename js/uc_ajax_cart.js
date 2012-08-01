@@ -82,7 +82,8 @@ Drupal.behaviors.ucAjaxCart = {
             ajaxCartBlockUI(Drupal.settings.uc_ajax_cart.ADD_TITLE,
                             '<div class="messages status">' + Drupal.settings.uc_ajax_cart.ADD_MESSAGE + '</div>')},
           success : ajaxCartFormSubmitted,
-          type : 'post'
+          type : 'post',
+          data: { 'op' : $elem.val() }
         });
         return false;
       });
@@ -111,13 +112,15 @@ Drupal.behaviors.ucAjaxCart = {
 
 // Submits product changes using AJAX and updates cart and cart block accordingly.
 function ajaxCartSubmit() {
+  var button = jQuery(this);
   jQuery(this).parents('form').ajaxSubmit({
     url: Drupal.settings.uc_ajax_cart.UPDATE_CALLBACK,
     success: ajaxCartFormSubmitted,
     beforeSubmit: function () {
       jQuery('#uc-cart-view-form input').attr('disabled', 'disabled');
       ajaxCartBlockUI(Drupal.settings.uc_ajax_cart.ADD_TITLE, '<div class="messages status">' + Drupal.settings.uc_ajax_cart.UPDATE_MESSAGE + '</div>');
-    }
+    },
+    data: { 'op': button.val() }
   });
   return false;
 }
