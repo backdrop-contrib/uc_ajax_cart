@@ -409,7 +409,7 @@ function uc_ajax_cart_init() {
   }
 
   /** Add standard js **/
-  drupal_add_js('misc/jquery.form.js');
+  drupal_add_library('system', 'jquery.form');
   drupal_add_js(drupal_get_path('module', 'uc_ajax_cart') . '/js/jquery.blockui.js');
   drupal_add_js(drupal_get_path('module', 'uc_ajax_cart') . '/js/uc_ajax_cart.js');
   drupal_add_js(drupal_get_path('module', 'uc_ajax_cart') . '/js/jquery.cookie.js');
