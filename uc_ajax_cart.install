@@ -10,23 +10,70 @@
  * @see http://drupal.org/node/1354
  */
 function uc_ajax_cart_uninstall() {
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_del('ajax_cart_message_timeout');
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_del('ajax_cart_message_effect');
-  variable_del('uc_ajax_cart_cart_view');
-  variable_del('uc_ajax_cart_cart_cached_load');
-  variable_del('uc_ajax_cart_registered_users_cart_cached_load');
-  variable_del('uc_ajax_cart_closed');
-  variable_del('uc_ajax_cart_closed_update');
-  variable_del('uc_ajax_cart_closed_default');
-  variable_del('uc_ajax_cart_track_closed_state');
-  variable_del('uc_ajax_cart_pane_effect');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_cart_view');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_cart_cached_load');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_registered_users_cart_cached_load');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_closed');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_closed_update');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_closed_default');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_track_closed_state');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_pane_effect');
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_del('ajax_cart_pane_effect_duration');
-  variable_del('uc_ajax_cart_ajaxify_cart_page');
-  variable_del('uc_ajax_cart_hide_update_cart_bt');
-  variable_del('uc_ajax_cart_initial_state');
-  variable_del('uc_ajax_cart_hide_cart_op_msgs');
-  variable_del('uc_ajax_cart_include_exclude');
-  variable_del('uc_ajax_cart_ajaxify_class');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_ajaxify_cart_page');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_hide_update_cart_bt');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_initial_state');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_hide_cart_op_msgs');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_include_exclude');
+  config_clear('uc_ajax_cart.settings', 'uc_ajax_cart_ajaxify_class');
+}
+
+/**
+ * Migrate uc_ajax_cart variables to config.
+ */
+function uc_ajax_cart_update_1000() {
+  $config = config('uc_ajax_cart.settings');
+  $config->set('uc_ajax_cart_cart_cached_load', update_variable_get('uc_ajax_cart_cart_cached_load', '0'));
+  $config->set('uc_ajax_cart_registered_users_cart_cached_load', update_variable_get('uc_ajax_cart_registered_users_cart_cached_load', '0'));
+  $config->set('uc_ajax_cart_ajaxify_cart_page', update_variable_get('uc_ajax_cart_ajaxify_cart_page', '1'));
+  $config->set('uc_ajax_cart_hide_update_cart_bt', update_variable_get('uc_ajax_cart_hide_update_cart_bt', array()));
+  $config->set('uc_ajax_cart_closed', update_variable_get('uc_ajax_cart_closed', '0'));
+  $config->set('uc_ajax_cart_closed_default', update_variable_get('uc_ajax_cart_closed_default', array()));
+  $config->set('uc_ajax_cart_track_closed_state', update_variable_get('uc_ajax_cart_track_closed_state', '0'));
+  $config->set('uc_ajax_cart_pane_effect', update_variable_get('uc_ajax_cart_pane_effect', '0'));
+  $config->set('uc_ajax_cart_pane_effect_duration', update_variable_get('uc_ajax_cart_pane_effect_duration', 'UC_AJAX_CART_DEFAULT_PANE_EFFECT_DURATION'));
+  $config->set('uc_ajax_cart_hide_cart_op_msgs', update_variable_get('uc_ajax_cart_hide_cart_op_msgs', array()));
+  $config->set('uc_ajax_cart_include_exclude', update_variable_get('uc_ajax_cart_include_exclude', '0'));
+  $config->set('uc_ajax_cart_ajaxify_class', update_variable_get('uc_ajax_cart_ajaxify_class', ''));
+  $config->set('uc_ajax_cart_closed_update', update_variable_get('uc_ajax_cart_closed_update', '0'));
+  $config->set('uc_ajax_cart_cart_view', update_variable_get('uc_ajax_cart_cart_view', '0'));
+  $config->save();
+
+  update_variable_del('uc_ajax_cart_cart_cached_load');
+  update_variable_del('uc_ajax_cart_registered_users_cart_cached_load');
+  update_variable_del('uc_ajax_cart_ajaxify_cart_page');
+  update_variable_del('uc_ajax_cart_hide_update_cart_bt');
+  update_variable_del('uc_ajax_cart_closed');
+  update_variable_del('uc_ajax_cart_closed_default');
+  update_variable_del('uc_ajax_cart_track_closed_state');
+  update_variable_del('uc_ajax_cart_pane_effect');
+  update_variable_del('uc_ajax_cart_pane_effect_duration');
+  update_variable_del('uc_ajax_cart_hide_cart_op_msgs');
+  update_variable_del('uc_ajax_cart_include_exclude');
+  update_variable_del('uc_ajax_cart_ajaxify_class');
+  update_variable_del('uc_ajax_cart_closed_update');
+  update_variable_del('uc_ajax_cart_cart_view');
+}
+
+/**
+ * Implements hook_install().
+ */
+function uc_ajax_cart_install() {
+  // Dynamically generated variable data was detected.
 }
 
 

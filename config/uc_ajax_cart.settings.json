@@ -1,0 +1,17 @@
+{
+    "_config_name": "uc_ajax_cart.settings",
+    "uc_ajax_cart_cart_cached_load": "0",
+    "uc_ajax_cart_registered_users_cart_cached_load": "0",
+    "uc_ajax_cart_ajaxify_cart_page": "1",
+    "uc_ajax_cart_hide_update_cart_bt": false,
+    "uc_ajax_cart_closed": "0",
+    "uc_ajax_cart_closed_default": false,
+    "uc_ajax_cart_track_closed_state": "0",
+    "uc_ajax_cart_pane_effect": "0",
+    "uc_ajax_cart_pane_effect_duration": "UC_AJAX_CART_DEFAULT_PANE_EFFECT_DURATION",
+    "uc_ajax_cart_hide_cart_op_msgs": false,
+    "uc_ajax_cart_include_exclude": "0",
+    "uc_ajax_cart_ajaxify_class": "",
+    "uc_ajax_cart_closed_update": "0",
+    "uc_ajax_cart_cart_view": "0"
+}

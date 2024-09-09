@@ -15,6 +15,7 @@ function theme_uc_ajax_cart_cart_links() {
     'class' => array('cart-block-view-cart'),
   );
   // Only add the checkout link if checkout is enabled.
+  // TODO This variable was probably removed in Backdrop without replacement.
   if (variable_get('uc_checkout_enabled', TRUE)) {
     $items[] = array(
       'data' => l(t('Checkout'), 'cart/checkout', array('attributes' => array('rel' => 'nofollow'))),
@@ -35,10 +36,10 @@ function theme_uc_ajax_cart_block_content_cached($variables) {
 
 
 function _theme_uc_ajax_cart_block_header($title) {
-  if (variable_get('uc_ajax_cart_closed', 0) != 0) {
+  if (config_get('uc_ajax_cart.settings', 'uc_ajax_cart_closed') != 0) {
     $title = '<a href="#" id="ajaxCartToggleView">' . $title . '</a>';
   }
-  return '<span class="title block-title" id="ajax-cart-headline">' . $title . '</span>';
+  return '<span class="title" id="ajax-cart-headline">' . $title . '</span>';
 
 }
 

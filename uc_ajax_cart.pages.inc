@@ -13,27 +13,30 @@ function uc_ajax_cart_links_process($arg1) {
   $messages = array();
 
   // Fail if the link is restricted.
+  // TODO This variable was probably removed in Backdrop without replacement.
   $data = variable_get('uc_cart_links_restrictions', '');
   if (!empty($data)) {
+    // TODO This variable was probably removed in Backdrop without replacement.
     $restrictions = explode("\n", variable_get('uc_cart_links_restrictions', ''));
     if (!empty($restrictions) && !in_array($arg1, $restrictions)) {
+      // TODO This variable was probably removed in Backdrop without replacement.
       $url = variable_get('uc_cart_links_invalid_page', '');
       if (empty($url)) {
-        drupal_get_message(t('Sorry no valid product'));
+        backdrop_get_message(t('Sorry no valid product'));
       }
       return;
     }
   }
 
   // Split apart the cart link on the -.
-  $actions = explode('-', drupal_strtolower($arg1));
+  $actions = explode('-', backdrop_strtolower($arg1));
   $rebuild_cart = FALSE;
 
   foreach ($actions as $action) {
-    switch (drupal_substr($action, 0, 1)) {
+    switch (backdrop_substr($action, 0, 1)) {
       // Set the ID of the cart link.
       case 'i':
-        $id = drupal_substr($action, 1);
+        $id = backdrop_substr($action, 1);
         break;
 
         // Add a product to the cart.
@@ -49,24 +52,24 @@ function uc_ajax_cart_links_process($arg1) {
         // Parse the product action to adjust the product variables.
         $parts = explode('_', $action);
         foreach ($parts as $part) {
-          switch (drupal_substr($part, 0, 1)) {
+          switch (backdrop_substr($part, 0, 1)) {
             // Set the product node ID: p23
             case 'p':
-              $p['nid'] = intval(drupal_substr($part, 1));
+              $p['nid'] = intval(backdrop_substr($part, 1));
               break;
               // Set the quantity to add to cart: q2
             case 'q':
-              $p['qty'] = intval(drupal_substr($part, 1));
+              $p['qty'] = intval(backdrop_substr($part, 1));
               break;
               // Set an attribute/option for the product: a3o6
             case 'a':
-              $attribute = intval(drupal_substr($part, 1, strpos($part, 'o') - 1));
-              $option = intval(drupal_substr($part, strpos($part, 'o') + 1));
+              $attribute = intval(backdrop_substr($part, 1, strpos($part, 'o') - 1));
+              $option = intval(backdrop_substr($part, strpos($part, 'o') + 1));
               $p['attributes'][$attribute] = (string) $option;
               break;
               // Suppress the add to cart message: m0
             case 'm':
-              $msg = intval(drupal_substr($part, 1)) == 1 ? TRUE : FALSE;
+              $msg = intval(backdrop_substr($part, 1)) == 1?TRUE : FALSE;
               break;
           }
         }
@@ -91,6 +94,7 @@ function uc_ajax_cart_links_process($arg1) {
 
         // Empty the shopping cart.
       case 'e':
+        // TODO This variable was probably removed in Backdrop without replacement.
         if (variable_get('uc_cart_links_empty', TRUE)) {
           uc_cart_empty(uc_cart_get_id());
         }
@@ -100,6 +104,7 @@ function uc_ajax_cart_links_process($arg1) {
       case 'm':
         // Load the messages if they haven't been loaded yet.
         if (empty($messages)) {
+          // TODO This variable was probably removed in Backdrop without replacement.
           $data = explode("\n", variable_get('uc_cart_links_messages', ''));
           foreach ($data as $message) {
             $mdata = explode('|', $message);
@@ -108,9 +113,9 @@ function uc_ajax_cart_links_process($arg1) {
         }
 
         // Parse the message key and display it if it exists.
-        $mkey = intval(drupal_substr($action, 1));
+        $mkey = intval(backdrop_substr($action, 1));
         if (!empty($messages[$mkey])) {
-          drupal_set_message($messages[$mkey]);
+          backdrop_set_message($messages[$mkey]);
         }
         break;
     }
@@ -121,6 +126,7 @@ function uc_ajax_cart_links_process($arg1) {
     }
   }
 
+  // TODO This variable was probably removed in Backdrop without replacement.
   if (variable_get('uc_cart_links_track', TRUE)) {
     $exists = db_query("SELECT clicks FROM {uc_cart_link_clicks} WHERE cart_link_id = :cart_link_id", array(':cart_link_id' => $id))->fetchField();
     if (intval($exists) == 0) {
@@ -128,10 +134,10 @@ function uc_ajax_cart_links_process($arg1) {
       /* db_query("INSERT INTO {uc_cart_link_clicks} (cart_link_id, clicks, last_click) VALUES ('%s', 1, %d)", $id, REQUEST_TIME) */
       $id = db_insert('uc_cart_link_clicks')
   ->fields(array(
-    'cart_link_id' => $id,
-    'clicks' => 1,
-    'last_click' => REQUEST_TIME,
-  ))
+        'cart_link_id' => $id,
+        'clicks' => 1,
+        'last_click' => REQUEST_TIME,
+      ))
   ->execute();
     }
     else {
@@ -139,9 +145,9 @@ function uc_ajax_cart_links_process($arg1) {
       /* db_query("UPDATE {uc_cart_link_clicks} SET clicks = clicks + 1, last_click = %d WHERE cart_link_id = '%s'", REQUEST_TIME, $id) */
       db_update('uc_cart_link_clicks')
   ->fields(array(
-    'clicks' =>  clicks + 1,
-    'last_click' => REQUEST_TIME,
-  ))
+        'clicks' => clicks + 1,
+        'last_click' => REQUEST_TIME,
+      ))
   ->condition('cart_link_id', $id)
   ->execute();
     }

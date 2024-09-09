@@ -26,8 +26,6 @@
         <td>
           <?php print $item['total'] ?>
         </td>
-      </tr>
-      <tr>
         <td colspan="4" class="cart-block-item-desc">
           <?php print $item['remove_link'] ?>
         </td>
@@ -45,9 +43,7 @@
       <td class="cart-block-summary-total">
         <label><?php print t('Total'); ?>: </label><?php print $total ;?>
       </td>
-    </tr>
-    <tr class="cart-block-summary-links">
-      <td colspan="2">
+      <td colspan="2" class="cart-block-summary-links">
         <?php print $cart_links; ?>
       </td>
     </tr>

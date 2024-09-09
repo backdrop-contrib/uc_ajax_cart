@@ -10,11 +10,12 @@
  * @see http://drupal.org/node/1354
  */
 function uc_ajax_cart_settings_overview($form, &$form_state) {
+  $config = config('uc_ajax_cart.settings');
   $form = array();
 
   $form['uc_ajax_cart_cart_cached_load'] = array(
     '#type' => 'checkbox',
-    '#default_value' => variable_get('uc_ajax_cart_cart_cached_load', 0),
+    '#default_value' => $config->get('uc_ajax_cart_cart_cached_load'),
     '#title' => t('Ajax support for anonymous users'),
     '#description' => t('Normally a link is shown for anonymous users. If this option is enabled, cart is loaded via ajax.'),
   );
@@ -22,7 +23,7 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
 
   $form['uc_ajax_cart_registered_users_cart_cached_load'] = array(
     '#type' => 'checkbox',
-    '#default_value' => variable_get('uc_ajax_cart_registered_users_cart_cached_load', 0),
+    '#default_value' => $config->get('uc_ajax_cart_registered_users_cart_cached_load'),
     '#title' => t('Ajax update on page load for registered users.'),
     '#description' => t('Sometimes cart block may be outdated for registered users (for example, user pushes back button). This option forces to load cart content using Ajax when page is loaded, so cart block is never outdated. When enabled, this option may add load to the server.'),
   );
@@ -35,13 +36,13 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
     '#collapsible' => TRUE,
     'uc_ajax_cart_ajaxify_cart_page' => array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_ajax_cart_ajaxify_cart_page', 1),
+      '#default_value' => $config->get('uc_ajax_cart_ajaxify_cart_page'),
       '#title' => t('Ajaxify cart page'),
       '#description' => t('Make the Ubercart\'s standard cart page ajaxified, so cart operations are done without reloading page.'),
     ),
     'uc_ajax_cart_hide_update_cart_bt' => array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_ajax_cart_hide_update_cart_bt', 0),
+      '#default_value' => $config->get('uc_ajax_cart_hide_update_cart_bt'),
       '#title' => t('Hide update button in cart page'),
       '#description' => t('UC AJAX Cart module ajaxifies cart page, so update button in cart page may be unnecessary. If this option is enabled update button is hidden in cart page. This option only applies if ajaxify cart page option is enabled.'),
     ),
@@ -56,18 +57,18 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
     '#collapsible' => TRUE,
     'uc_ajax_cart_closed' => array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_ajax_cart_closed', 0),
+      '#default_value' => $config->get('uc_ajax_cart_closed'),
       '#title' => t('Make the shopping cart block collapsible by clicking the name or arrow.'),
     ),
     'uc_ajax_cart_closed_default' => array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_ajax_cart_closed_default', 0),
+      '#default_value' => $config->get('uc_ajax_cart_closed_default'),
       '#title' => t('Cart closed by default.'),
       '#description' => t('This option only applies if collapsible cart block is selected.'),
     ),
     'uc_ajax_cart_track_closed_state' => array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_ajax_cart_track_closed_state', 0),
+      '#default_value' => $config->get('uc_ajax_cart_track_closed_state'),
       '#title' => t('Keep cart open/closed between page loads and cart operations.'),
       '#description' => t('If checked keeps cart open state between page loads and cart operations such add product or remove product from cart. This option only applies if collapsible cart block is selected.'),
     ),
@@ -78,7 +79,7 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
       '#collapsible' => TRUE,
       'effect' => array(
         '#type' => 'checkbox',
-        '#default_value' => variable_get('uc_ajax_cart_pane_effect', 0),
+        '#default_value' => $config->get('uc_ajax_cart_pane_effect'),
         '#title' => t('Use slide effect the show/hide cart pane.'),
       ),
       'duration' => array(
@@ -86,12 +87,14 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
         '#size' => 6,
         '#required' => TRUE,
         '#title' => t('Effect duration in milliseconds'),
-        '#default_value' => variable_get('uc_ajax_cart_pane_effect_duration', UC_AJAX_CART_DEFAULT_PANE_EFFECT_DURATION),
+        '#default_value' => $config->get('uc_ajax_cart_pane_effect_duration'),
       ),
     ),
   );
 
 
+  // TODO This variable was probably removed in Backdrop without replacement.
+  // TODO This variable was probably removed in Backdrop without replacement.
   $form['settings_messages'] = array(
     '#type' => 'fieldset',
     '#title' => t('Message settings'),
@@ -117,7 +120,7 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
     ),
     'uc_ajax_cart_hide_cart_op_msgs' => array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_ajax_cart_hide_cart_op_msgs', 0),
+      '#default_value' => $config->get('uc_ajax_cart_hide_cart_op_msgs'),
       '#title' => t('Do not display any cart operations info.'),
       '#description' => t('When a cart operation is done a informative message is displayed. Select this option if you want to hide this messages. WARNING: User may not be aware of cart operations if you hide this messages.'),
     ),
@@ -133,12 +136,12 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
       '#type' => 'radios',
       '#title' => t('Apply Ajax Cart functionality to specified products'),
       '#options' => array(t('Ajaxify all Ubercart products.'), t('Ajaxify only products that have the specified CSS class.'), t('Ajaxify all products except products that have the specified CSS class.')),
-      '#default_value' => variable_get('uc_ajax_cart_include_exclude', 0),
+      '#default_value' => $config->get('uc_ajax_cart_include_exclude'),
     ),
     'ajaxify_class' => array(
       '#type' => 'textfield',
       '#title' => t('CSS class'),
-      '#default_value' => variable_get('uc_ajax_cart_ajaxify_class', ''),
+      '#default_value' => $config->get('uc_ajax_cart_ajaxify_class'),
       '#description' => t('Specify the CSS class for applying ajaxified add to cart button to products. Add this class to the add to cart submit button element or any of its parents. Do not inlcude the preceding dot.'),
     ),
   );
@@ -175,21 +178,23 @@ function uc_ajax_cart_settings_overview_validate($form, $form_state) {
  * @see http://drupal.org/node/1354
  */
 function uc_ajax_cart_settings_overview_submit( $form, $form_state) {
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_set('ajax_cart_message_timeout', $form_state['values']['timeout']);
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_set('ajax_cart_message_effect', $form_state['values']['messages']);
-  variable_set('uc_ajax_cart_cart_view', isset($form_state['values']['cart_view_on'])?$form_state['values']['cart_view_on']:0);
-  variable_set('uc_ajax_cart_cart_cached_load', $form_state['values']['uc_ajax_cart_cart_cached_load']);
-  variable_set('uc_ajax_cart_registered_users_cart_cached_load', $form_state['values']['uc_ajax_cart_registered_users_cart_cached_load']);
-  variable_set('uc_ajax_cart_ajaxify_cart_page', $form_state['values']['uc_ajax_cart_ajaxify_cart_page']);
-  variable_set('uc_ajax_cart_hide_update_cart_bt', $form_state['values']['uc_ajax_cart_hide_update_cart_bt']);
-  variable_set('uc_ajax_cart_closed', $form_state['values']['uc_ajax_cart_closed']);
-  variable_set('uc_ajax_cart_closed_update', isset($form_state['values']['uc_ajax_cart_closed_update'])?$form_state['values']['uc_ajax_cart_closed_update']:0);
-  variable_set('uc_ajax_cart_closed_default', $form_state['values']['uc_ajax_cart_closed_default']);
-  variable_set('uc_ajax_cart_initial_state', isset($form_state['values']['uc_ajax_cart_initial_state'])?$form_state['values']['uc_ajax_cart_initial_state']:0);
-  variable_set('uc_ajax_cart_track_closed_state', $form_state['values']['uc_ajax_cart_track_closed_state']);
-  variable_set('uc_ajax_cart_pane_effect', $form_state['values']['effect']);
-  variable_set('uc_ajax_cart_pane_effect_duration', str_replace('+', '', $form_state['values']['duration']));
-  variable_set('uc_ajax_cart_hide_cart_op_msgs', $form_state['values']['uc_ajax_cart_hide_cart_op_msgs']);
-  variable_set('uc_ajax_cart_include_exclude', $form_state['values']['include_exclude']);
-  variable_set('uc_ajax_cart_ajaxify_class', $form_state['values']['ajaxify_class']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_cart_view', isset($form_state['values']['cart_view_on']) ? $form_state['values']['cart_view_on'] : 0);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_cart_cached_load', $form_state['values']['uc_ajax_cart_cart_cached_load']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_registered_users_cart_cached_load', $form_state['values']['uc_ajax_cart_registered_users_cart_cached_load']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_ajaxify_cart_page', $form_state['values']['uc_ajax_cart_ajaxify_cart_page']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_hide_update_cart_bt', $form_state['values']['uc_ajax_cart_hide_update_cart_bt']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_closed', $form_state['values']['uc_ajax_cart_closed']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_closed_update', isset($form_state['values']['uc_ajax_cart_closed_update']) ? $form_state['values']['uc_ajax_cart_closed_update'] : 0);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_closed_default', $form_state['values']['uc_ajax_cart_closed_default']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_initial_state', isset($form_state['values']['uc_ajax_cart_initial_state']) ? $form_state['values']['uc_ajax_cart_initial_state'] : 0);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_track_closed_state', $form_state['values']['uc_ajax_cart_track_closed_state']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_pane_effect', $form_state['values']['effect']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_pane_effect_duration', str_replace('+', '', $form_state['values']['duration']));
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_hide_cart_op_msgs', $form_state['values']['uc_ajax_cart_hide_cart_op_msgs']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_include_exclude', $form_state['values']['include_exclude']);
+  config_set('uc_ajax_cart.settings', 'uc_ajax_cart_ajaxify_class', $form_state['values']['ajaxify_class']);
 }

@@ -11,12 +11,6 @@ define('UC_AJAX_CART_DEFAULT_TIMEOUT', 3000);
 define('UC_AJAX_CART_DEFAULT_EFFECT', 1);
 define('UC_AJAX_CART_DEFAULT_PANE_EFFECT_DURATION', 200);
 
-// fix bug include 'uc_ajax_cart.php';
-// fix bug include 'uc_modules_add_to_cart.php';
-
-
-// _uc_ajax_cart_load_res();
-
 /**
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
@@ -25,11 +19,11 @@ function uc_ajax_cart_permission() {
   return array(
     'show uncached cart' => array(
       'title' => t('show uncached cart'),
-      'description' => t('TODO Add a description for \'show uncached cart\''),
+      'description' => t('show uncached cart'),
     ),
     'use cart' => array(
       'title' => t('use cart'),
-      'description' => t('TODO Add a description for \'use cart\''),
+      'description' => t('use cart'),
     ),
   );
 }
@@ -43,10 +37,11 @@ function uc_ajax_cart_uc_cart_item($op, $product) {
   switch ($op) {
     case 'remove':
       if ((!isset($_SESSION['do_complete']) || !$_SESSION['do_complete'])
-               &&
+                 &&
             (!((isset($_REQUEST['q']) && $_REQUEST['q'] == 'cart') && ($_REQUEST['op'] != 'Update cart')))) {
+        // TODO This variable was probably removed in Backdrop without replacement.
         $message = variable_get('ajax_cart_message_remove', '!product successfully removed from cart.');
-        drupal_set_message(t($message, array('!product' => $product->title)));
+        backdrop_set_message(t($message, array('!product' => $product->title)));
       }
       break;
   }
@@ -63,7 +58,7 @@ function uc_ajax_cart_menu() {
   $items['admin/store/settings/uc_ajax_cart'] = array(
     'title' => 'UC Ajax cart settings',
     'description' => 'Configure the uc ajax cart settings.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('uc_ajax_cart_settings_overview'),
     'access arguments' => array('administer store'),
     'file' => 'uc_ajax_cart.admin.inc',
@@ -114,7 +109,12 @@ function uc_ajax_cart_menu() {
  */
 function uc_ajax_cart_callback($op, $nid = NULL, $data = NULL) {
 
-  $cacheEnabled = variable_get('cache', 0);
+  // Start session for anonymous users if not already started
+  if (!backdrop_session_started()) {
+    backdrop_session_start();
+  }
+
+  $cacheEnabled = config_get('system.performance', 'cache');
   if ($cacheEnabled > 0 && !$user->uid) {
     $page = request_uri();
     global $base_root;
@@ -128,29 +128,26 @@ function uc_ajax_cart_callback($op, $nid = NULL, $data = NULL) {
   switch ($op) {
     case 'remove':
       uc_ajax_cart_remove_item($_GET['nid'], unserialize(base64_decode($_GET['data'])));
-      // TODO Please change this theme call to use an associative array for the $variables parameter.
       print theme('status_messages');
       break;
     case 'add':
       uc_ajax_cart_add_item($_POST);
-      // TODO Please change this theme call to use an associative array for the $variables parameter.
       print theme('status_messages');
       break;
     case 'show':
       uc_ajax_cart_show_cart();
       break;
     case 'show-cart-view':
-      include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'uc_cart') . '/uc_cart.pages.inc';
+      include_once BACKDROP_ROOT . '/' . backdrop_get_path('module', 'uc_cart') . '/uc_cart.pages.inc';
       $outputs = uc_cart_view();
-      $output =  drupal_render($outputs);
+      $output =  backdrop_render($outputs);
       print $output;
       break;
     case 'update':
       $formValues = array('values' => $_POST);
       $cart = new UcAjaxCart();
       $items = $cart->getCartContents();
-      drupal_form_submit('uc_cart_view_form', $formValues, $items);
-      // TODO Please change this theme call to use an associative array for the $variables parameter.
+      backdrop_form_submit('uc_cart_view_form', $formValues, $items);
       print theme('status_messages');
       break;
     case 'link':
@@ -159,9 +156,8 @@ function uc_ajax_cart_callback($op, $nid = NULL, $data = NULL) {
         uc_ajax_cart_links_process($link);
       }
       else {
-        drupal_set_message(t('Sorry link is not valid'), 'error');
+        backdrop_set_message(t('Sorry link is not valid'), 'error');
       }
-      // TODO Please change this theme call to use an associative array for the $variables parameter.
       print theme('status_messages');
       break;
   }
@@ -191,11 +187,11 @@ function uc_ajax_cart_remove_item($nid, $data) {
     $cart->removeItemFromCart($nid, $data);
   }
   catch (NoProductException $ex) {
-    drupal_set_message(t('No valid product'));
+    backdrop_set_message(t('No valid product'));
   }
   catch (CartException $ex) {
     foreach ($ex->getMessages() as $message) {
-      drupal_set_message($message, 'warning');
+      backdrop_set_message($message, 'warning');
     }
   }
 }
@@ -205,6 +201,11 @@ function uc_ajax_cart_remove_item($nid, $data) {
  * @see http://drupal.org/node/1354
  */
 function uc_ajax_cart_add_item($data) {
+
+  // Start session for anonymous users if not already started
+  if (!backdrop_session_started()) {
+    backdrop_session_start();
+  }
 
   // Protect agains bad calls.
   if (!isset($data['form_id'])) {
@@ -223,7 +224,7 @@ function uc_ajax_cart_add_item($data) {
 
   $formValues = array('values' => $data);
 
-  drupal_form_submit($formID, $formValues, $product);
+  backdrop_form_submit($formID, $formValues, $product);
   return;
 }
 
@@ -284,7 +285,7 @@ function uc_ajax_cart_preprocess_uc_ajax_cart_block_content(&$vars) {
   foreach ($content as $item) {
     $display_item = module_invoke($item->module, 'uc_cart_display', $item);
     if (!empty($display_item)) {
-      $attributes = isset($item->data['attributes'])?$item->data['attributes']:NULL;
+      $attributes = isset($item->data['attributes']) ? $item->data['attributes'] : NULL;
       $total += $display_item['#total'];
       $total_items += $display_item['qty']['#default_value'];
       $items[] = array(
@@ -296,8 +297,8 @@ function uc_ajax_cart_preprocess_uc_ajax_cart_block_content(&$vars) {
         'item' => $item,
         'image' => uc_product_get_picture($display_item['nid']['#value'], 'cart'),
         'node' => node_load($item->nid),
-        'total' => $display_item['#total'],
-        'remove_link' => l(t('Remove product'),
+        'total' => uc_currency_format($display_item['#total']),
+        'remove_link' => l(t('Remove'),
                                   UC_AJAX_CART_REMOVE_CALLBACK,
                                   array(
           'attributes' => array(
@@ -315,7 +316,7 @@ function uc_ajax_cart_preprocess_uc_ajax_cart_block_content(&$vars) {
       );
     }
   }
-  $vars['total'] = $total; //uc_price($total, $context);
+  $vars['total'] = uc_currency_format($total);
   $vars['items'] = $items;
   $vars['item_count'] = $total_items;
   $vars['cart_links'] = theme('uc_ajax_cart_cart_links');
@@ -328,21 +329,32 @@ function uc_ajax_cart_preprocess_uc_ajax_cart_block_content(&$vars) {
  * Implements hook_block_info().
  */
 function uc_ajax_cart_block_info() {
-  // TODO Rename block deltas (e.g. delta-0) to readable strings.
   if (TRUE) {
     // Retrieve block informations
     $blocks['delta-0'] = array(
       'info' => t('Ajax shopping cart'),
-      'cache' => DRUPAL_NO_CACHE,
+      'cache' => BACKDROP_NO_CACHE,
     );
     return $blocks;
   }
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function uc_ajax_cart_config_info() {
+  $prefixes['uc_ajax_cart.settings'] = array(
+    'label' => t('Ajax Driven Cart settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_block_view().
  */
 function uc_ajax_cart_block_view($delta) {
+  $config = config('uc_ajax_cart.settings');
   if (TRUE) {
     //Only a wrapper to uc_cart_block
     $cartContent = uc_cart_get_contents();
@@ -353,25 +365,23 @@ function uc_ajax_cart_block_view($delta) {
     $content['subject'] = theme('uc_ajax_cart_block_header', array('text' => $hasItems));
 
     global $user;
-    $cacheEnabled = variable_get('cache', 0);
+    $cacheEnabled = config_get('system.performance', 'cache');
 
     if (!$user->uid && $cacheEnabled > 0) {
-      $loadOnPageView = variable_get('uc_ajax_cart_cart_cached_load', 0);
+      $loadOnPageView = $config->get('uc_ajax_cart_cart_cached_load');
       if ($loadOnPageView != 0) {
         $content['content'] = '<div id="ajaxCartUpdate" class="load-on-view"><p>' . t('Loading cart') . '</p></div>';
       }
       else {
-        // TODO Please change this theme call to use an associative array for the $variables parameter.
         $content['content'] = '<div id="ajaxCartUpdate">' . theme('uc_ajax_cart_block_content_cached') . '</div>';
       }
     }
     else {
-      $load_on_page_view_class = variable_get('uc_ajax_cart_cart_cached_load', 0) ? ' class="load-on-view"' : '';
+      $load_on_page_view_class = $config->get('uc_ajax_cart_cart_cached_load') ? ' class="load-on-view"' : '';
       if ($hasItems == TRUE) {
         $content['content'] = '<div id="ajaxCartUpdate" ' . $load_on_page_view_class . '>' . theme('uc_ajax_cart_block_content', array('items' => $cartContent)) . '</div>';
       }
       else {
-        // TODO Please change this theme call to use an associative array for the $variables parameter.
         $content['content'] = '<div id="ajaxCartUpdate" ' . $load_on_page_view_class . '>' . theme('uc_ajax_cart_block_content_empty') . '</div>';
       }
     }
@@ -393,15 +403,13 @@ function uc_ajax_cart_block_configure($delta) {
   }
 }
 
-///**
-// * @todo Please document this function.
-// * @see http://drupal.org/node/1354
-// */
-//function uc_ajax_cart_block_OLD($op = 'list', $delta = 0, $edit = array()) { }
 
-
-
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function uc_ajax_cart_init() {
+  $config = config('uc_ajax_cart.settings');
   static $loaded;
 
   if (isset($loaded) && $loaded === TRUE) {
@@ -409,12 +417,12 @@ function uc_ajax_cart_init() {
   }
 
   /** Add standard js **/
-  drupal_add_library('system', 'jquery.form');
-  drupal_add_js(drupal_get_path('module', 'uc_ajax_cart') . '/js/jquery.blockui.js');
-  drupal_add_js(drupal_get_path('module', 'uc_ajax_cart') . '/js/uc_ajax_cart.js');
-  drupal_add_js(drupal_get_path('module', 'uc_ajax_cart') . '/js/jquery.cookie.js');
+  backdrop_add_library('system','jquery.form');
+  backdrop_add_js(backdrop_get_path('module', 'uc_ajax_cart') . '/js/jquery.blockui.min.js');
+  backdrop_add_js(backdrop_get_path('module', 'uc_ajax_cart') . '/js/uc_ajax_cart.js');
+  backdrop_add_js(backdrop_get_path('module', 'uc_ajax_cart') . '/js/jquery.cookie.js');
+  backdrop_add_css(backdrop_get_path('module', 'uc_ajax_cart') . '/css/uc_ajax_cart.css');
 
-  drupal_add_css(drupal_get_path('module', 'uc_ajax_cart') . '/css/uc_ajax_cart.css');
 
   $settings = array(
     'CALLBACK' => url(UC_AJAX_CART_ADD_CALLBACK),
@@ -428,24 +436,25 @@ function uc_ajax_cart_init() {
     'TIMEOUT' => (int) variable_get('ajax_cart_message_timeout', UC_AJAX_CART_DEFAULT_TIMEOUT),
     'UPDATE_CALLBACK' => url(UC_AJAX_CART_UPDATE_CALLBACK),
     'UPDATE_MESSAGE' => t('Update cart'), // Message displayed when a product is being updated in cart.
-    'UPDATE' => variable_get('uc_ajax_cart_closed_update', 0),
+    'SESSION' => session_id(),
+    'UPDATE' => $config->get('uc_ajax_cart_closed_update'),
     'CART_OPERATION' => t('Cart'), // Message's title displayed when a product is being added to cart.
-    'CART_VIEW_ON' => variable_get('uc_ajax_cart_cart_view', 0),
+    'CART_VIEW_ON' => $config->get('uc_ajax_cart_cart_view'),
     'SHOW_VIEW_CALLBACK' => url(UC_AJAX_CART_SHOW_VIEW_CALLBACK),
-    'TRACK_CLOSED_STATE' => variable_get('uc_ajax_cart_track_closed_state', 0),
-    'INITIAL_CLOSED_STATE' => variable_get('uc_ajax_cart_closed_default', FALSE),
-    'CART_PANE_EFFECT' => variable_get('uc_ajax_cart_pane_effect', 0),
-    'CART_PANE_EFFECT_DURATION' => (int) variable_get('uc_ajax_cart_pane_effect_duration', UC_AJAX_CART_DEFAULT_PANE_EFFECT_DURATION),
-    'HIDE_CART_OPERATIONS' => variable_get('uc_ajax_cart_hide_cart_op_msgs', FALSE),
-    'COLLAPSIBLE_CART' => variable_get('uc_ajax_cart_closed', 0),
+    'TRACK_CLOSED_STATE' => $config->get('uc_ajax_cart_track_closed_state'),
+    'INITIAL_CLOSED_STATE' => $config->get('uc_ajax_cart_closed_default'),
+    'CART_PANE_EFFECT' => $config->get('uc_ajax_cart_pane_effect'),
+    'CART_PANE_EFFECT_DURATION' => (int) $config->get('uc_ajax_cart_pane_effect_duration'),
+    'HIDE_CART_OPERATIONS' => $config->get('uc_ajax_cart_hide_cart_op_msgs'),
+    'COLLAPSIBLE_CART' => $config->get('uc_ajax_cart_closed'),
   );
 
-  if (($include_exclude = variable_get('uc_ajax_cart_include_exclude', 0)) && ($ajaxify_class = variable_get('uc_ajax_cart_ajaxify_class', ''))) {
+  if (($include_exclude = $config->get('uc_ajax_cart_include_exclude')) && ($ajaxify_class = $config->get('uc_ajax_cart_ajaxify_class'))) {
     $settings['AJAXIFY_CLASS_EXCLUDES'] = ($include_exclude - 1);
     $settings['AJAXIFY_CLASS'] = $ajaxify_class;
   }
 
-  drupal_add_js(array('uc_ajax_cart' => $settings), array('type' => 'setting', 'scope' => 'footer', 'group' => JS_DEFAULT));
+  backdrop_add_js(array('uc_ajax_cart' => $settings), array('type' => 'setting', 'scope' => 'footer', 'group' => JS_DEFAULT));
   $loaded = TRUE;
 }
 
@@ -514,22 +523,23 @@ function uc_ajax_cart_preprocess_block(&$vars, $hook) {
  * @see http://drupal.org/node/1354
  */
 function uc_ajax_cart_form_alter(&$form, $form_state, $form_id) {
+  $config = config('uc_ajax_cart.settings');
   if (preg_match('/^uc_product_add_to_cart_form_/', $form_id)
-      || preg_match('/^uc_catalog_buy_it_now_form_/', $form_id)
-      || preg_match('/^uc_product_kit_add_to_cart_form/', $form_id)) {
+        || preg_match('/^uc_catalog_buy_it_now_form_/', $form_id)
+        || preg_match('/^uc_product_kit_add_to_cart_form/', $form_id)) {
     uc_ajax_cart_alter_cart_form($form, $form_state, $form_id);
   }
   elseif ('uc_cart_view_form' == $form_id) {
 
     // Ajaxify cart page?
-    if (variable_get('uc_ajax_cart_ajaxify_cart_page', 1)) {
-      drupal_add_js(array('uc_ajax_cart' => array('AJAXIFY_CART_PAGE' => TRUE)), array('type' => 'setting', 'scope' => 'footer', 'group' =>JS_DEFAULT));
+    if ($config->get('uc_ajax_cart_ajaxify_cart_page')) {
+      backdrop_add_js(array('uc_ajax_cart' => array('AJAXIFY_CART_PAGE' => TRUE)), array('type' => 'setting', 'scope' => 'footer', 'group' => JS_DEFAULT));
 
       // Hide update cart button?
       if (!isset($form['actions']['update']['#attributes']['class'])) {
         $form['actions']['update']['#attributes']['class'] = array();
       }
-      if (variable_get('uc_ajax_cart_hide_update_cart_bt', FALSE)) {
+      if ($config->get('uc_ajax_cart_hide_update_cart_bt')) {
         $form['actions']['update']['#attributes']['class'][] = 'hidden-update-bt';
       }
       $form['actions']['update']['#attributes']['class'][] = 'ajax-cart-submit-form-button';
@@ -561,4 +571,15 @@ function uc_ajax_cart_theme_registry_alter(&$theme_registry) {
  */
 function uc_ajax_cart_uc_empty_cart() {
   return '<p id="cart-form-pane">' . t('There are no products in your shopping cart.') . '</p>';
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function uc_ajax_cart_autoload_info() {
+  return array(
+    'UcAjaxCart' => 'uc_ajax_cart.extender.inc',
+    'NoProductException' => 'uc_ajax_cart.extender.inc',
+    'CartException' => 'uc_ajax_cart.extender.inc',
+  );
 }
