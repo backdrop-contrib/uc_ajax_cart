@@ -109,12 +109,13 @@ Backdrop.behaviors.ucAjaxCart = {
     $(this).parents('form').ajaxSubmit({
       url: Backdrop.settings.uc_ajax_cart.UPDATE_CALLBACK,
       success: function(response) {
-        ajaxCartFormSubmitted;
+        var message = response || 'Cart updated successfully.';
+        ajaxCartFormSubmitted(message);
         $('#uc-cart-view-form input').removeAttr('disabled');
       },
       beforeSubmit: function () {
         $('#uc-cart-view-form input').attr('disabled', 'disabled');
-        ajaxCartBlockUI(Backdrop.settings.uc_ajax_cart.ADD_TITLE, '<div class="messages status">' + Backdrop.settings.uc_ajax_cart.UPDATE_MESSAGE + '</div>');
+        // ajaxCartBlockUI(Backdrop.settings.uc_ajax_cart.ADD_TITLE, '<div class="messages status">' + Backdrop.settings.uc_ajax_cart.UPDATE_MESSAGE + '</div>');
       }
     });
     return false;
@@ -138,23 +139,18 @@ Backdrop.behaviors.ucAjaxCart = {
       // Trigger submit button when cart qty form input elements are changed.
       $('#uc-cart-view-form .qty input').not('.ajax-cart-processed').bind('change', triggerCartSubmit)
       .addClass('ajax-cart-processed');
-  
-      // Ubercart has changed remove checkboxes to buttons above Ubercart 2.4.
-      // $('#uc-cart-view-form .remove input').not('.ajax-cart-processed').each(function () {
-      //   var elem = $(this);
-      //   var is_button = false;
-      //   if (elem.attr('type') != 'checkbox') {
-      //     is_button = true;
-      //   }
-      //   elem.click(function (e) {
-      //     if (is_button) {
-      //       $(this).parents('tr').eq(0).find('td.qty input.form-text').val('0');
-      //     }
-      //     triggerCartSubmit();
-      //     return false;
-      //   });
-      //   elem.addClass('ajax-cart-processed');
-      // });
+
+
+      $('#uc-cart-view-form .remove input').not('.ajax-cart-processed').each(function () {
+        var elem = $(this);
+        elem.click(function (e) {
+          e.preventDefault();
+          $(this).parents('tr').eq(0).find('td.qty input.form-text').val('0');
+          triggerCartSubmit();
+          return false;
+        });
+        elem.addClass('ajax-cart-processed');
+      });
     }
   }
   
@@ -343,7 +339,9 @@ Backdrop.behaviors.ucAjaxCart = {
   
   function ajaxCartBlockUIRemove(url) {
     $('#uc-cart-view-form input').attr('disabled', 'disabled');
-    ajaxCartShowMessageProxy(Backdrop.settings.uc_ajax_cart.REMOVE_TITLE, Backdrop.settings.uc_ajax_cart.REMOVE_MESSAGE);
+    ajaxCartBlockUI(Backdrop.settings.uc_ajax_cart.REMOVE_TITLE,
+      '<div class="messages status">' + Backdrop.settings.uc_ajax_cart.REMOVE_MESSAGE + '</div>');
+    // ajaxCartShowMessageProxy(Backdrop.settings.uc_ajax_cart.REMOVE_TITLE, Backdrop.settings.uc_ajax_cart.REMOVE_MESSAGE);
     $.post(url, ajaxCartFormSubmitted);
     return false;
   }
@@ -371,8 +369,7 @@ Backdrop.behaviors.ucAjaxCart = {
         url: Backdrop.settings.uc_ajax_cart.SHOW_VIEW_CALLBACK,
         type: 'GET',
         success: function(response) {
-          var content = $(response).find('#desired-content-selector').html();
-          $('#cart-form-pane').html(content);
+          $('#cart-form-pane').html(response);
           ajaxCartInitCartView();
         },
         error: function(xhr, status, error) {

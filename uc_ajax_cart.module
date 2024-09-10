@@ -298,21 +298,20 @@ function uc_ajax_cart_preprocess_uc_ajax_cart_block_content(&$vars) {
         'image' => uc_product_get_picture($display_item['nid']['#value'], 'cart'),
         'node' => node_load($item->nid),
         'total' => uc_currency_format($display_item['#total']),
-        'remove_link' => l(t('Remove'),
-                                  UC_AJAX_CART_REMOVE_CALLBACK,
-                                  array(
-          'attributes' => array(
-            'onclick' => "ajaxCartBlockUIRemove(this.href); return false;",
-            'class' => array('remove-cart-link', 'remove-cart-link-' . $display_item['nid']['#value']),
-          ),
-          'query' => array(
-            'nid' => $display_item['nid']['#value'],
-            'destination' => $_GET['q'],
-            'data' => base64_encode($display_item['data']['#value']),
-            'action' => 'remove',
-          ),
-        )
-                              ),
+        'remove_link' => l(t('Remove'), UC_AJAX_CART_REMOVE_CALLBACK,
+          array(
+            'attributes' => array(
+              'onclick' => "ajaxCartBlockUIRemove(this.href); return false;",
+              'class' => array('remove-cart-link', 'remove-cart-link-' . $display_item['nid']['#value']),
+            ),
+            'query' => array(
+              'nid' => $display_item['nid']['#value'],
+              'destination' => $_GET['q'],
+              'data' => base64_encode($display_item['data']['#value']),
+              'action' => 'remove',
+            ),
+          )
+        ),
       );
     }
   }
@@ -373,6 +372,7 @@ function uc_ajax_cart_block_view($delta) {
         $content['content'] = '<div id="ajaxCartUpdate" class="load-on-view"><p>' . t('Loading cart') . '</p></div>';
       }
       else {
+        
         $content['content'] = '<div id="ajaxCartUpdate">' . theme('uc_ajax_cart_block_content_cached') . '</div>';
       }
     }
@@ -382,6 +382,7 @@ function uc_ajax_cart_block_view($delta) {
         $content['content'] = '<div id="ajaxCartUpdate" ' . $load_on_page_view_class . '>' . theme('uc_ajax_cart_block_content', array('items' => $cartContent)) . '</div>';
       }
       else {
+        
         $content['content'] = '<div id="ajaxCartUpdate" ' . $load_on_page_view_class . '>' . theme('uc_ajax_cart_block_content_empty') . '</div>';
       }
     }
@@ -422,7 +423,6 @@ function uc_ajax_cart_init() {
   backdrop_add_js(backdrop_get_path('module', 'uc_ajax_cart') . '/js/uc_ajax_cart.js');
   backdrop_add_js(backdrop_get_path('module', 'uc_ajax_cart') . '/js/jquery.cookie.js');
   backdrop_add_css(backdrop_get_path('module', 'uc_ajax_cart') . '/css/uc_ajax_cart.css');
-
 
   $settings = array(
     'CALLBACK' => url(UC_AJAX_CART_ADD_CALLBACK),

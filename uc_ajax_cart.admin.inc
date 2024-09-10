@@ -87,7 +87,7 @@ function uc_ajax_cart_settings_overview($form, &$form_state) {
         '#size' => 6,
         '#required' => TRUE,
         '#title' => t('Effect duration in milliseconds'),
-        '#default_value' => $config->get('uc_ajax_cart_pane_effect_duration'),
+        '#default_value' => variable_get('uc_ajax_cart_pane_effect_duration', UC_AJAX_CART_DEFAULT_PANE_EFFECT_DURATION),
       ),
     ),
   );
