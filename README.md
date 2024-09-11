@@ -26,7 +26,7 @@ Bugs and Feature Requests should be reported in the Issue Queue:
 Documentation
 -------------------
 Please, do help us create documentation for this module. 
-https://github.com/backdrop-contrib/domain/wiki
+https://github.com/backdrop-contrib/uc_ajax_cart/wiki
 
 Maintainers
 -----------
