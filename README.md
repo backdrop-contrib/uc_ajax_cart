@@ -30,7 +30,7 @@ https://github.com/backdrop-contrib/uc_ajax_cart/wiki
 
 Maintainers
 -----------
-- [Sudipto Mitro (sudipto68)](https://github.com/sudipto68)
+- [Sudipto Kumar Mitra (sudipto68)](https://github.com/sudipto68)
 - [Tim Erickson (stpaultim)](https://github.com/stpaultim)
 
 Credits
